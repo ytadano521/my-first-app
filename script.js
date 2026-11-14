@@ -5,12 +5,15 @@ const overlayTitle = document.querySelector("#overlay-title");
 const overlayCopy = document.querySelector("#overlay-copy");
 const startButton = document.querySelector("#start-button");
 const coinCount = document.querySelector("#coin-count");
+const staminaCount = document.querySelector("#stamina-count");
+const scoreCount = document.querySelector("#score-count");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const WORLD_WIDTH = 2700;
 const GRAVITY = 0.58;
-const keys = { left: false, right: false, jump: false };
+const keys = { left: false, right: false, jump: false, attack: false };
+const MAX_STAMINA = 3;
 
 const platforms = [
   { x: 0, y: 465, w: 440, h: 100 },
@@ -35,6 +38,15 @@ const coinSpots = [
   { x: 1978, y: 305 },
 ];
 
+const enemySpots = [
+  { x: 350, minX: 320, maxX: 410 },
+  { x: 700, minX: 650, maxX: 800 },
+  { x: 1100, minX: 970, maxX: 1240 },
+  { x: 1580, minX: 1400, maxX: 1680 },
+  { x: 1990, minX: 1810, maxX: 2130 },
+  { x: 2440, minX: 2280, maxX: 2640 },
+];
+
 const player = {
   x: 82,
   y: 405,
@@ -45,24 +57,96 @@ const player = {
   speed: 4.1,
   grounded: false,
   facing: 1,
+  stamina: MAX_STAMINA,
+  invulnerableMs: 0,
+  attackMs: 0,
+  attackCooldownMs: 0,
+  attackQueued: false,
 };
 
 let coins = [];
+let enemies = [];
 let cameraX = 0;
 let gameState = "title";
 let lastTime = 0;
 let elapsed = 0;
+let defeatedEnemies = 0;
+let audioContext;
+
+function playSound(kind) {
+  if (!audioContext) return;
+  const sounds = {
+    jump: [440, 660, "sine"],
+    coin: [740, 990, "sine"],
+    attack: [230, 150, "square"],
+    defeat: [520, 260, "triangle"],
+    hurt: [180, 90, "sawtooth"],
+    clear: [523, 784, "sine"],
+    out: [220, 110, "triangle"],
+  };
+  const [startFrequency, endFrequency, type] = sounds[kind];
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  const now = audioContext.currentTime;
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(startFrequency, now);
+  oscillator.frequency.exponentialRampToValueAtTime(endFrequency, now + 0.12);
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  oscillator.start(now);
+  oscillator.stop(now + 0.15);
+}
+
+function currentScore() {
+  const collected = coins.filter((coin) => coin.collected).length;
+  return collected * 100 + defeatedEnemies * 150;
+}
+
+function updateHud() {
+  const collected = coins.filter((coin) => coin.collected).length;
+  coinCount.textContent = `${collected} / ${coins.length}`;
+  staminaCount.textContent = "♥".repeat(player.stamina) + "♡".repeat(MAX_STAMINA - player.stamina);
+  staminaCount.setAttribute("aria-label", `スタミナ ${player.stamina}/${MAX_STAMINA}`);
+  scoreCount.textContent = `SCORE ${String(currentScore()).padStart(5, "0")}`;
+}
+
+function finishGame(state) {
+  gameState = state;
+  if (state === "won") {
+    const timeBonus = Math.max(0, 3000 - Math.floor(elapsed / 1000) * 10);
+    const score = currentScore() + timeBonus;
+    playSound("clear");
+    setOverlay("ステージクリア！<br>お見事！", `スコア ${score} 点（タイムボーナス ${timeBonus} 点） / ${Math.floor(elapsed / 1000)} 秒`, "もう一度遊ぶ");
+  } else {
+    playSound("out");
+    setOverlay("GAME OVER", state === "fall" ? "穴に落ちてしまった！冒険はここまで。" : "スタミナが尽きてしまった！もう一度挑戦しよう。", "リトライ");
+  }
+}
 
 function resetGame() {
+  keys.left = false;
+  keys.right = false;
+  keys.jump = false;
+  keys.attack = false;
   player.x = 82;
   player.y = 405;
   player.vx = 0;
   player.vy = 0;
   player.grounded = false;
   player.facing = 1;
+  player.stamina = MAX_STAMINA;
+  player.invulnerableMs = 0;
+  player.attackMs = 0;
+  player.attackCooldownMs = 0;
+  player.attackQueued = false;
   cameraX = 0;
   coins = coinSpots.map((coin) => ({ ...coin, collected: false }));
-  coinCount.textContent = `0 / ${coins.length}`;
+  enemies = enemySpots.map((enemy) => ({ ...enemy, y: 421, w: 32, h: 38, speed: 1.15, direction: 1, attackCooldownMs: 0, alive: true }));
+  defeatedEnemies = 0;
+  elapsed = 0;
+  updateHud();
   gameState = "playing";
   overlay.classList.add("is-hidden");
 }
@@ -75,6 +159,8 @@ function setOverlay(title, copy, buttonText) {
 }
 
 function startGame() {
+  if (!audioContext && window.AudioContext) audioContext = new window.AudioContext();
+  if (audioContext?.state === "suspended") audioContext.resume();
   resetGame();
   lastTime = performance.now();
 }
@@ -88,10 +174,14 @@ function setKey(key, isDown) {
     if (isDown && !keys.jump) player.jumpQueued = true;
     keys.jump = isDown;
   }
+  if (key.toLowerCase() === "x" || key.toLowerCase() === "j") {
+    if (isDown && !keys.attack) player.attackQueued = true;
+    keys.attack = isDown;
+  }
 }
 
 window.addEventListener("keydown", (event) => {
-  if (["ArrowLeft", "ArrowRight", "ArrowUp", " "].includes(event.key)) event.preventDefault();
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", " ", "x", "X"].includes(event.key)) event.preventDefault();
   setKey(event.key, true);
   if ((event.key === "Enter" || event.key === " ") && gameState !== "playing") startGame();
 });
@@ -101,12 +191,18 @@ window.addEventListener("blur", () => {
   keys.left = false;
   keys.right = false;
   keys.jump = false;
+  keys.attack = false;
 });
 
 document.querySelectorAll("[data-control]").forEach((button) => {
   const control = button.dataset.control;
   const press = (event) => {
     event.preventDefault();
+    if (control === "attack") {
+      if (!keys.attack) player.attackQueued = true;
+      keys.attack = true;
+      return;
+    }
     if (control === "jump") {
       if (!keys.jump) player.jumpQueued = true;
       keys.jump = true;
@@ -115,8 +211,9 @@ document.querySelectorAll("[data-control]").forEach((button) => {
     }
   };
   const release = () => {
+    if (control === "attack") keys.attack = false;
     if (control === "jump") keys.jump = false;
-    else keys[control] = false;
+    else if (control !== "attack") keys[control] = false;
   };
   button.addEventListener("pointerdown", press);
   button.addEventListener("pointerup", release);
@@ -128,14 +225,24 @@ function update(delta) {
   if (gameState !== "playing") return;
   const step = Math.min(delta / 16.67, 2);
   elapsed += delta;
+  player.invulnerableMs = Math.max(0, player.invulnerableMs - delta);
+  player.attackMs = Math.max(0, player.attackMs - delta);
+  player.attackCooldownMs = Math.max(0, player.attackCooldownMs - delta);
   player.vx = ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)) * player.speed;
   if (player.vx !== 0) player.facing = Math.sign(player.vx);
 
   if (player.jumpQueued && player.grounded) {
     player.vy = -12;
     player.grounded = false;
+    playSound("jump");
   }
   player.jumpQueued = false;
+  if (player.attackQueued && player.attackCooldownMs === 0) {
+    player.attackMs = 180;
+    player.attackCooldownMs = 420;
+    playSound("attack");
+  }
+  player.attackQueued = false;
 
   player.x = Math.max(0, Math.min(WORLD_WIDTH - player.w, player.x + player.vx * step));
   const previousBottom = player.y + player.h;
@@ -162,22 +269,55 @@ function update(delta) {
     const dy = player.y + player.h / 2 - coin.y;
     if (Math.hypot(dx, dy) < 30) {
       coin.collected = true;
-      coinCount.textContent = `${coins.filter((item) => item.collected).length} / ${coins.length}`;
+      playSound("coin");
+      updateHud();
     }
   }
 
-  if (player.y > HEIGHT + 100) {
-    player.x = 82;
-    player.y = 405;
-    player.vx = 0;
-    player.vy = 0;
-    cameraX = 0;
+  for (const enemy of enemies) {
+    if (!enemy.alive) continue;
+    enemy.attackCooldownMs = Math.max(0, enemy.attackCooldownMs - delta);
+    enemy.x += enemy.speed * enemy.direction * step;
+    if (enemy.x < enemy.minX || enemy.x + enemy.w > enemy.maxX) enemy.direction *= -1;
+
+    const overlaps = player.x < enemy.x + enemy.w && player.x + player.w > enemy.x
+      && player.y < enemy.y + enemy.h && player.y + player.h > enemy.y;
+    const attackHits = player.attackMs > 0 && player.y < enemy.y + enemy.h
+      && player.y + player.h > enemy.y
+      && (player.facing > 0
+        ? enemy.x + enemy.w / 2 >= player.x + player.w / 2 && enemy.x <= player.x + player.w + 48
+        : enemy.x + enemy.w / 2 <= player.x + player.w / 2 && enemy.x + enemy.w >= player.x - 48);
+    if (attackHits) {
+      enemy.alive = false;
+      defeatedEnemies += 1;
+      playSound("defeat");
+      updateHud();
+      continue;
+    }
+    if (overlaps && player.invulnerableMs === 0 && enemy.attackCooldownMs === 0) {
+      player.stamina -= 1;
+      player.invulnerableMs = 900;
+      enemy.attackCooldownMs = 900;
+      player.vx = player.x < enemy.x ? -5 : 5;
+      player.vy = -4;
+      player.grounded = false;
+      playSound("hurt");
+      updateHud();
+      if (player.stamina <= 0) {
+        finishGame("stamina");
+        return;
+      }
+    }
+  }
+
+  if (player.y > HEIGHT) {
+    finishGame("fall");
+    return;
   }
 
   cameraX = Math.max(0, Math.min(WORLD_WIDTH - WIDTH, player.x - WIDTH * 0.36));
   if (player.x > WORLD_WIDTH - 115) {
-    gameState = "won";
-    setOverlay("ゴール！<br>よくできました。", `コインを ${coins.filter((coin) => coin.collected).length} 枚集めたよ。`, "もう一度遊ぶ");
+    finishGame("won");
   }
 }
 
@@ -263,6 +403,7 @@ function drawPlayer() {
   const bob = player.grounded && Math.abs(player.vx) > 0 ? Math.sin(elapsed / 55) * 2 : 0;
   ctx.save();
   ctx.translate(x + player.w / 2, y + bob);
+  if (player.invulnerableMs > 0 && Math.floor(elapsed / 90) % 2 === 0) ctx.globalAlpha = 0.45;
 
   ctx.fillStyle = "rgba(33, 64, 77, 0.18)";
   ctx.beginPath();
@@ -287,6 +428,39 @@ function drawPlayer() {
   roundedRect(-14, 34, 12, 9, 4);
   ctx.fill();
   roundedRect(3, 34, 12, 9, 4);
+  ctx.fill();
+  if (player.attackMs > 0) {
+    ctx.strokeStyle = "#fff2a1";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(player.facing * 28, 17, 24, player.facing > 0 ? -0.8 : Math.PI - 0.8, player.facing > 0 ? 0.8 : Math.PI + 0.8);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawEnemy(enemy) {
+  if (!enemy.alive) return;
+  const x = enemy.x - cameraX;
+  if (x + enemy.w < 0 || x > WIDTH) return;
+  ctx.save();
+  ctx.translate(x + enemy.w / 2, enemy.y);
+  ctx.fillStyle = "#523c63";
+  roundedRect(-16, 8, 32, 27, 10);
+  ctx.fill();
+  ctx.fillStyle = "#ef8b79";
+  ctx.beginPath();
+  ctx.arc(0, 9, 16, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = "#fff4df";
+  ctx.beginPath();
+  ctx.arc(-6, 18, 3, 0, Math.PI * 2);
+  ctx.arc(6, 18, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#392e4e";
+  ctx.beginPath();
+  ctx.arc(-6, 18, 1.5, 0, Math.PI * 2);
+  ctx.arc(6, 18, 1.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -317,6 +491,7 @@ function render() {
   drawBackground();
   for (const platform of platforms) drawPlatform(platform);
   for (const coin of coins) drawCoin(coin);
+  for (const enemy of enemies) drawEnemy(enemy);
   drawGoal();
   drawPlayer();
 }

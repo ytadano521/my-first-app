@@ -103,10 +103,31 @@ h1 span {
 .hud {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   margin-left: auto;
   color: #f5e4a4;
   font: 500 12px "DM Mono", monospace;
+}
+
+.hud-divider {
+  height: 17px;
+  margin: 0 2px;
+  border-left: 1px solid rgb(179 198 235 / 20%);
+}
+
+.stamina-label {
+  color: #96a4ba;
+  font-size: 8px;
+}
+
+#stamina-count {
+  color: #f37d68;
+  letter-spacing: 0.08em;
+}
+
+#score-count {
+  color: #dce5f2;
+  font-size: 10px;
 }
 
 .coin-icon {
@@ -246,6 +267,12 @@ kbd {
   font: 500 10px "DM Mono", monospace;
 }
 
+.touch-controls button[data-control="attack"] {
+  width: 86px;
+  color: #ffad9a;
+  font: 500 10px "DM Mono", monospace;
+}
+
 .page-note {
   margin: 19px 0 0;
   color: #77869f;
@@ -271,7 +298,38 @@ kbd {
 
   .game-topbar {
     height: 50px;
-    padding: 0 14px;
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .game-name {
+    font-size: 8px;
+  }
+
+  .game-name span {
+    display: none;
+  }
+
+  .hud {
+    gap: 4px;
+    font-size: 9px;
+  }
+
+  .stamina-label {
+    display: none;
+  }
+
+  #score-count {
+    font-size: 7px;
+  }
+
+  .hud-divider {
+    margin: 0 1px;
   }
 
   .overlay {
@@ -310,6 +368,19 @@ kbd {
 
   .touch-controls {
     display: flex;
+    gap: 6px;
+  }
+
+  .touch-controls button {
+    width: 46px;
+    height: 44px;
+  }
+
+  .touch-controls button[data-control="jump"],
+  .touch-controls button[data-control="attack"] {
+    width: 68px;
+    margin-left: 4px;
+    font-size: 9px;
   }
 }
 

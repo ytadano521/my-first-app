@@ -22,6 +22,11 @@
           <div class="hud">
             <span class="coin-icon" aria-hidden="true">●</span>
             <span id="coin-count">0 / 5</span>
+            <span class="hud-divider" aria-hidden="true"></span>
+            <span class="stamina-label">STAMINA</span>
+            <span id="stamina-count" aria-label="スタミナ">♥♥♥</span>
+            <span class="hud-divider" aria-hidden="true"></span>
+            <span id="score-count">SCORE 00000</span>
           </div>
         </div>
 
@@ -31,16 +36,16 @@
             <div class="overlay-card">
               <p class="eyebrow">A LITTLE ADVENTURE</p>
               <h2 id="overlay-title">雲の道を<br />駆け抜けよう。</h2>
-              <p id="overlay-copy">コインを集めて、旗のあるゴールを目指そう。</p>
+              <p id="overlay-copy">コインを集め、敵を倒してゴールへ！穴に落ちると一発でアウト。</p>
               <button id="start-button" class="start-button" type="button">冒険をはじめる <span>→</span></button>
-              <p class="key-hint">移動 <kbd>←</kbd> <kbd>→</kbd>　ジャンプ <kbd>Space</kbd></p>
+              <p class="key-hint">移動 <kbd>←</kbd> <kbd>→</kbd>　ジャンプ <kbd>Space</kbd>　攻撃 <kbd>X</kbd></p>
             </div>
           </div>
         </div>
 
         <footer class="game-footer">
-          <span>← → 移動 <i></i> SPACE ジャンプ</span>
-          <span class="footer-note">落ちても最初からやり直せます</span>
+          <span>← → 移動 <i></i> SPACE ジャンプ <i></i> X 攻撃</span>
+          <span class="footer-note">穴に落ちると即アウト / 敵の攻撃でスタミナ減少</span>
         </footer>
       </section>
 
@@ -48,6 +53,7 @@
         <button type="button" data-control="left" aria-label="左へ移動">←</button>
         <button type="button" data-control="right" aria-label="右へ移動">→</button>
         <button type="button" data-control="jump" aria-label="ジャンプ">JUMP</button>
+        <button type="button" data-control="attack" aria-label="攻撃">ATTACK</button>
       </div>
       <p class="page-note">小さな一歩から、冒険は始まる。</p>
     </main>
