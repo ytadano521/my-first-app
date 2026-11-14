@@ -323,57 +323,93 @@ function update(delta) {
 
 function drawBackground() {
   const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  sky.addColorStop(0, "#8bd0e0");
-  sky.addColorStop(1, "#d5eddf");
+  sky.addColorStop(0, "#090b22");
+  sky.addColorStop(0.58, "#17123a");
+  sky.addColorStop(1, "#261340");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ctx.fillStyle = "rgba(255, 242, 190, 0.78)";
+  ctx.fillStyle = "rgba(111, 92, 255, 0.24)";
   ctx.beginPath();
-  ctx.arc(760 - cameraX * 0.08, 100, 38, 0, Math.PI * 2);
+  ctx.arc(760 - cameraX * 0.04, 112, 78, 0, Math.PI * 2);
   ctx.fill();
-
-  drawHills("#a0d4cd", 365, 0.13, 170);
-  drawHills("#7fc0b6", 415, 0.25, 205);
-  drawCloud(150 - (cameraX * 0.2) % 1120, 115, 1);
-  drawCloud(570 - (cameraX * 0.15) % 1300, 190, 0.72);
-  drawCloud(920 - (cameraX * 0.18) % 1200, 125, 0.88);
-}
-
-function drawHills(color, baseY, speed, size) {
-  ctx.fillStyle = color;
+  ctx.strokeStyle = "rgba(56, 246, 255, 0.45)";
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(0, HEIGHT);
-  for (let x = -size; x <= WIDTH + size; x += size) {
-    const worldX = x + ((cameraX * speed) % size);
-    ctx.quadraticCurveTo(worldX + size / 2, baseY - size * 0.55, worldX + size, baseY);
+  ctx.arc(760 - cameraX * 0.04, 112, 52, 0, Math.PI * 2);
+  ctx.stroke();
+
+  for (let star = 0; star < 28; star += 1) {
+    const x = ((star * 173 - cameraX * 0.035) % WIDTH + WIDTH) % WIDTH;
+    const y = 28 + (star * 67) % 245;
+    ctx.fillStyle = star % 4 === 0 ? "#ff5bdc" : "#7ffbff";
+    ctx.globalAlpha = 0.35 + (star % 3) * 0.2;
+    ctx.fillRect(x, y, star % 4 === 0 ? 2 : 1, star % 4 === 0 ? 2 : 1);
   }
-  ctx.lineTo(WIDTH, HEIGHT);
-  ctx.closePath();
-  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  drawCityLayer(462, 0.12, 118, "#111633", "rgba(149, 112, 255, 0.38)");
+  drawCityLayer(480, 0.24, 92, "#0b1029", "rgba(56, 246, 255, 0.52)");
+
+  ctx.strokeStyle = "rgba(56, 246, 255, 0.15)";
+  ctx.lineWidth = 1;
+  for (let y = 485; y < HEIGHT; y += 14) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(WIDTH, y);
+    ctx.stroke();
+  }
+  for (let x = -WIDTH; x < WIDTH * 2; x += 80) {
+    ctx.beginPath();
+    ctx.moveTo(WIDTH / 2 + (x - WIDTH / 2) * 0.12, 465);
+    ctx.lineTo(x - (cameraX * 0.24) % 80, HEIGHT);
+    ctx.stroke();
+  }
 }
 
-function drawCloud(x, y, scale) {
-  ctx.fillStyle = "rgba(255, 255, 255, 0.64)";
-  ctx.beginPath();
-  ctx.arc(x, y, 22 * scale, 0, Math.PI * 2);
-  ctx.arc(x + 24 * scale, y - 9 * scale, 29 * scale, 0, Math.PI * 2);
-  ctx.arc(x + 54 * scale, y, 21 * scale, 0, Math.PI * 2);
-  ctx.fill();
+function drawCityLayer(baseY, speed, step, buildingColor, windowColor) {
+  const scroll = cameraX * speed;
+  const offset = scroll % step;
+  const firstCell = Math.floor(scroll / step);
+  for (let index = -1; index < WIDTH / step + 2; index += 1) {
+    const cell = firstCell + index;
+    const seed = Math.abs(cell * 37 + 19);
+    const x = index * step - offset;
+    const width = step * (0.62 + (seed % 25) / 100);
+    const height = 60 + (seed * 17) % 100;
+    const top = baseY - height;
+    ctx.fillStyle = buildingColor;
+    ctx.fillRect(x, top, width, height);
+    ctx.strokeStyle = windowColor;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, top + 0.5, width - 1, height - 1);
+    ctx.fillStyle = windowColor;
+    for (let windowY = top + 12; windowY < baseY - 8; windowY += 17) {
+      for (let windowX = x + 8; windowX < x + width - 5; windowX += 15) {
+        if ((Math.floor(windowX + windowY + seed) % 3) !== 0) ctx.fillRect(windowX, windowY, 3, 5);
+      }
+    }
+  }
 }
 
 function drawPlatform(platform) {
   const x = platform.x - cameraX;
   if (x + platform.w < 0 || x > WIDTH) return;
-  ctx.fillStyle = platform.h > 30 ? "#426b69" : "#547e76";
+  ctx.fillStyle = platform.h > 30 ? "#10152e" : "#171637";
   roundedRect(x, platform.y, platform.w, platform.h, 7);
   ctx.fill();
-  ctx.fillStyle = "#84c59d";
+  ctx.shadowColor = "#38f6ff";
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = "rgba(56, 246, 255, 0.82)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#38f6ff";
   roundedRect(x, platform.y, platform.w, 9, 5);
   ctx.fill();
-  ctx.fillStyle = "rgba(221, 238, 193, 0.55)";
+  ctx.fillStyle = "rgba(255, 53, 211, 0.62)";
   for (let mark = 0; mark < platform.w; mark += 38) {
-    ctx.fillRect(x + mark + 9, platform.y + 20, 12, 3);
+    ctx.fillRect(x + mark + 9, platform.y + 20, 12, 2);
   }
 }
 
@@ -385,14 +421,17 @@ function drawCoin(coin) {
   ctx.save();
   ctx.translate(x, coin.y);
   ctx.scale(pulse, 1);
-  ctx.fillStyle = "#f4c85d";
+  ctx.shadowColor = "#38f6ff";
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = "#38f6ff";
   ctx.beginPath();
   ctx.arc(0, 0, 11, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#fff0a8";
+  ctx.strokeStyle = "#ff69df";
   ctx.lineWidth = 3;
   ctx.stroke();
-  ctx.fillStyle = "#d99b37";
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#091127";
   ctx.fillRect(-1, -6, 2, 12);
   ctx.restore();
 }
@@ -405,17 +444,23 @@ function drawPlayer() {
   ctx.translate(x + player.w / 2, y + bob);
   if (player.invulnerableMs > 0 && Math.floor(elapsed / 90) % 2 === 0) ctx.globalAlpha = 0.45;
 
-  ctx.fillStyle = "rgba(33, 64, 77, 0.18)";
+  ctx.fillStyle = "rgba(56, 246, 255, 0.16)";
   ctx.beginPath();
   ctx.ellipse(0, player.h + 2, 18, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#f37d68";
+  ctx.shadowColor = player.invulnerableMs > 0 ? "#ff35d3" : "#38f6ff";
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = "#17122f";
   roundedRect(-15, 5, 30, 34, 9);
   ctx.fill();
-  ctx.fillStyle = "#f5bf91";
+  ctx.strokeStyle = "#38f6ff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "#b8fbff";
   roundedRect(-12, -9, 24, 23, 9);
   ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.fillStyle = "#fff8ed";
   ctx.beginPath();
   ctx.arc(player.facing * 4, 0, 3, 0, Math.PI * 2);
@@ -424,14 +469,16 @@ function drawPlayer() {
   ctx.beginPath();
   ctx.arc(player.facing * 5 + player.facing, 0, 1.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#426b69";
+  ctx.fillStyle = "#ff35d3";
   roundedRect(-14, 34, 12, 9, 4);
   ctx.fill();
   roundedRect(3, 34, 12, 9, 4);
   ctx.fill();
   if (player.attackMs > 0) {
-    ctx.strokeStyle = "#fff2a1";
-    ctx.lineWidth = 5;
+    ctx.shadowColor = "#38f6ff";
+    ctx.shadowBlur = 18;
+    ctx.strokeStyle = "#38f6ff";
+    ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.arc(player.facing * 28, 17, 24, player.facing > 0 ? -0.8 : Math.PI - 0.8, player.facing > 0 ? 0.8 : Math.PI + 0.8);
     ctx.stroke();
@@ -445,19 +492,25 @@ function drawEnemy(enemy) {
   if (x + enemy.w < 0 || x > WIDTH) return;
   ctx.save();
   ctx.translate(x + enemy.w / 2, enemy.y);
-  ctx.fillStyle = "#523c63";
+  ctx.shadowColor = "#ff35d3";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = "#1b1034";
   roundedRect(-16, 8, 32, 27, 10);
   ctx.fill();
-  ctx.fillStyle = "#ef8b79";
+  ctx.strokeStyle = "#ff35d3";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "#ff35d3";
   ctx.beginPath();
   ctx.arc(0, 9, 16, Math.PI, 0);
   ctx.fill();
-  ctx.fillStyle = "#fff4df";
+  ctx.fillStyle = "#38f6ff";
   ctx.beginPath();
   ctx.arc(-6, 18, 3, 0, Math.PI * 2);
   ctx.arc(6, 18, 3, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#392e4e";
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#071022";
   ctx.beginPath();
   ctx.arc(-6, 18, 1.5, 0, Math.PI * 2);
   ctx.arc(6, 18, 1.5, 0, Math.PI * 2);
@@ -467,19 +520,26 @@ function drawEnemy(enemy) {
 
 function drawGoal() {
   const x = WORLD_WIDTH - 105 - cameraX;
-  ctx.fillStyle = "#edf3dc";
+  ctx.shadowColor = "#38f6ff";
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = "#38f6ff";
   ctx.fillRect(x, 355, 5, 110);
-  ctx.fillStyle = "#f37d68";
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = "#ff35d3";
+  ctx.fillStyle = "#ff35d3";
   ctx.beginPath();
   ctx.moveTo(x + 5, 358);
   ctx.lineTo(x + 48, 371);
   ctx.lineTo(x + 5, 385);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#edf3dc";
+  ctx.shadowColor = "#38f6ff";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = "#d9ffff";
   ctx.beginPath();
   ctx.arc(x + 2, 352, 6, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 function roundedRect(x, y, width, height, radius) {

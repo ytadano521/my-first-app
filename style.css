@@ -1,10 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Orbitron:wght@500;600;700&display=swap");
 
 :root {
   color-scheme: dark;
   font-family: "DM Sans", "Noto Sans JP", sans-serif;
-  color: #f3f5ff;
-  background: #101a30;
+  color: #e8f7ff;
+  background: #08091c;
+  --void: #08091c;
+  --panel: #10132c;
+  --cyan: #38f6ff;
+  --magenta: #ff35d3;
+  --muted: #9baacb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -18,8 +23,22 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(ellipse at 50% 35%, rgb(38 57 94 / 36%), transparent 58%),
-    #101a30;
+    radial-gradient(ellipse at 50% 30%, rgb(62 28 115 / 35%), transparent 56%),
+    radial-gradient(ellipse at 5% 90%, rgb(0 174 207 / 12%), transparent 40%),
+    var(--void);
+}
+
+body::before {
+  position: fixed;
+  z-index: 5;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(56 246 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(56 246 255 / 5%) 1px, transparent 1px);
+  background-size: 42px 42px;
+  content: "";
+  mask-image: linear-gradient(to bottom, transparent, #000 35%, #000);
+  pointer-events: none;
 }
 
 button {
@@ -34,25 +53,28 @@ button {
 
 .page-header {
   margin: 0 0 24px 4px;
+  text-shadow: 0 0 24px rgb(56 246 255 / 14%);
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #84d9c5;
+  color: var(--cyan);
   font: 500 10px/1.5 "DM Mono", monospace;
   letter-spacing: 0.2em;
 }
 
 h1 {
   margin: 0;
+  color: #f2f7ff;
   font-size: clamp(20px, 3vw, 27px);
   font-weight: 800;
   letter-spacing: 0.035em;
+  text-shadow: 0 0 16px rgb(56 246 255 / 27%);
 }
 
 h1 span {
   margin-left: 8px;
-  color: #9eabc4;
+  color: var(--magenta);
   font-size: 0.62em;
   font-weight: 500;
   letter-spacing: 0.03em;
@@ -60,10 +82,10 @@ h1 span {
 
 .game-shell {
   overflow: hidden;
-  border: 1px solid rgb(179 198 235 / 17%);
-  border-radius: 14px;
-  background: #17243b;
-  box-shadow: 0 24px 70px rgb(3 9 22 / 35%);
+  border: 1px solid rgb(56 246 255 / 40%);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 0 22px rgb(56 246 255 / 12%), 0 24px 70px rgb(3 3 19 / 60%);
 }
 
 .game-topbar {
@@ -72,7 +94,8 @@ h1 span {
   align-items: center;
   gap: 12px;
   padding: 0 22px;
-  border-bottom: 1px solid rgb(179 198 235 / 11%);
+  border-bottom: 1px solid rgb(56 246 255 / 20%);
+  background: linear-gradient(90deg, #121530, #0c1027 58%, #1b102f);
 }
 
 .brand-mark {
@@ -80,22 +103,25 @@ h1 span {
   height: 27px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: #82ddc3;
-  color: #12253a;
+  border: 1px solid var(--cyan);
+  border-radius: 6px;
+  background: rgb(56 246 255 / 12%);
+  box-shadow: 0 0 14px rgb(56 246 255 / 45%), inset 0 0 8px rgb(56 246 255 / 15%);
+  color: var(--cyan);
   font-size: 15px;
   font-weight: 900;
 }
 
 .game-name {
-  color: #e0e7f5;
-  font: 500 10px/1.5 "DM Mono", monospace;
-  letter-spacing: 0.12em;
+  color: #eafaff;
+  font: 600 10px/1.5 "Orbitron", "DM Mono", monospace;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 9px rgb(56 246 255 / 38%);
 }
 
 .game-name span {
   display: block;
-  color: #75839b;
+  color: var(--magenta);
   font-size: 8px;
   letter-spacing: 0.16em;
 }
@@ -105,41 +131,53 @@ h1 span {
   align-items: center;
   gap: 7px;
   margin-left: auto;
-  color: #f5e4a4;
+  color: #ffe989;
   font: 500 12px "DM Mono", monospace;
+  text-shadow: 0 0 9px rgb(255 233 137 / 40%);
 }
 
 .hud-divider {
   height: 17px;
   margin: 0 2px;
-  border-left: 1px solid rgb(179 198 235 / 20%);
+  border-left: 1px solid rgb(149 112 255 / 38%);
 }
 
 .stamina-label {
-  color: #96a4ba;
+  color: var(--muted);
   font-size: 8px;
 }
 
 #stamina-count {
-  color: #f37d68;
+  color: #ff668b;
   letter-spacing: 0.08em;
+  text-shadow: 0 0 8px rgb(255 53 211 / 55%);
 }
 
 #score-count {
-  color: #dce5f2;
+  color: var(--cyan);
   font-size: 10px;
+  text-shadow: 0 0 8px rgb(56 246 255 / 45%);
 }
 
 .coin-icon {
-  color: #f5c95f;
+  color: #ffe16b;
   font-size: 13px;
-  text-shadow: 0 0 9px rgb(245 201 95 / 70%);
+  text-shadow: 0 0 12px rgb(255 225 107 / 85%);
 }
 
 .game-stage {
   position: relative;
   overflow: hidden;
-  background: #9ad9e3;
+  background: #0a1028;
+}
+
+.game-stage::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 3px, rgb(4 5 20 / 12%) 4px);
+  content: "";
+  pointer-events: none;
 }
 
 canvas {
@@ -151,11 +189,12 @@ canvas {
 
 .overlay {
   position: absolute;
+  z-index: 2;
   inset: 0;
   display: grid;
   align-items: center;
   padding: clamp(20px, 6vw, 72px);
-  background: linear-gradient(90deg, rgb(13 28 48 / 76%), rgb(13 28 48 / 23%) 75%);
+  background: linear-gradient(90deg, rgb(7 9 27 / 91%), rgb(7 9 27 / 65%) 62%, rgb(7 9 27 / 25%));
   transition: opacity 220ms ease;
 }
 
@@ -167,37 +206,45 @@ canvas {
 
 .overlay-card {
   max-width: 400px;
+  padding: clamp(16px, 3vw, 26px);
+  border-left: 2px solid var(--cyan);
+  background: linear-gradient(110deg, rgb(11 15 39 / 89%), rgb(11 15 39 / 43%));
+  box-shadow: -9px 0 24px -16px var(--cyan);
 }
 
 .overlay-card h2 {
   margin: 0;
+  color: #f4fbff;
   font-size: clamp(27px, 5vw, 48px);
   line-height: 1.35;
   letter-spacing: 0.025em;
+  text-shadow: 0 0 20px rgb(56 246 255 / 30%);
 }
 
 .overlay-card > p:not(.eyebrow, .key-hint) {
   margin: 13px 0 24px;
-  color: #c1ccda;
+  color: #c3d2e8;
   font-size: 13px;
 }
 
 .start-button {
   min-height: 46px;
   padding: 0 18px;
-  border: 0;
-  border-radius: 7px;
-  background: #82ddc3;
-  color: #10233a;
+  border: 1px solid var(--cyan);
+  border-radius: 5px;
+  background: var(--cyan);
+  box-shadow: 0 0 18px rgb(56 246 255 / 46%), inset 0 0 0 1px rgb(255 255 255 / 20%);
+  color: #071022;
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
-  transition: transform 150ms ease, background 150ms ease;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
 .start-button:hover {
   transform: translateY(-2px);
-  background: #a0f0d9;
+  background: #a8fbff;
+  box-shadow: 0 0 28px rgb(56 246 255 / 72%);
 }
 
 .start-button span {
@@ -207,7 +254,7 @@ canvas {
 
 .key-hint {
   margin: 19px 0 0;
-  color: #c4cfdf;
+  color: #b6c8e3;
   font-size: 10px;
 }
 
@@ -215,10 +262,10 @@ kbd {
   display: inline-block;
   min-width: 19px;
   padding: 3px 5px;
-  border: 1px solid rgb(255 255 255 / 28%);
+  border: 1px solid rgb(56 246 255 / 40%);
   border-radius: 4px;
-  background: rgb(255 255 255 / 8%);
-  color: #f0f3f9;
+  background: rgb(56 246 255 / 8%);
+  color: var(--cyan);
   font: 10px "DM Mono", monospace;
   text-align: center;
 }
@@ -229,7 +276,7 @@ kbd {
   align-items: center;
   justify-content: space-between;
   padding: 0 22px;
-  color: #a6b1c6;
+  color: #96a8c9;
   font: 9px "DM Mono", monospace;
   letter-spacing: 0.07em;
 }
@@ -240,7 +287,7 @@ kbd {
 }
 
 .footer-note {
-  color: #6f7d96;
+  color: #7885a9;
 }
 
 .touch-controls {
@@ -253,29 +300,35 @@ kbd {
 .touch-controls button {
   width: 58px;
   height: 48px;
-  border: 1px solid rgb(179 198 235 / 22%);
-  border-radius: 9px;
-  background: #1a2a44;
-  color: #e8f0fb;
+  border: 1px solid rgb(56 246 255 / 38%);
+  border-radius: 6px;
+  background: linear-gradient(145deg, #171a39, #0b1129);
+  box-shadow: 0 0 12px rgb(56 246 255 / 9%), inset 0 0 10px rgb(56 246 255 / 5%);
+  color: #e8faff;
   touch-action: none;
+}
+
+.touch-controls button:active {
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgb(56 246 255 / 45%), inset 0 0 12px rgb(56 246 255 / 22%);
 }
 
 .touch-controls button[data-control="jump"] {
   width: 86px;
   margin-left: 18px;
-  color: #82ddc3;
+  color: var(--cyan);
   font: 500 10px "DM Mono", monospace;
 }
 
 .touch-controls button[data-control="attack"] {
   width: 86px;
-  color: #ffad9a;
+  color: #ff71d7;
   font: 500 10px "DM Mono", monospace;
 }
 
 .page-note {
   margin: 19px 0 0;
-  color: #77869f;
+  color: #7885a9;
   font-size: 10px;
   letter-spacing: 0.12em;
   text-align: center;
