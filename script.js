@@ -109,7 +109,7 @@ function updateHud() {
   coinCount.textContent = `${collected} / ${coins.length}`;
   staminaCount.textContent = "♥".repeat(player.stamina) + "♡".repeat(MAX_STAMINA - player.stamina);
   staminaCount.setAttribute("aria-label", `スタミナ ${player.stamina}/${MAX_STAMINA}`);
-  scoreCount.textContent = `SCORE ${String(currentScore()).padStart(5, "0")}`;
+  scoreCount.textContent = `得点 ${String(currentScore()).padStart(5, "0")}`;
 }
 
 function finishGame(state) {
@@ -323,93 +323,123 @@ function update(delta) {
 
 function drawBackground() {
   const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  sky.addColorStop(0, "#090b22");
-  sky.addColorStop(0.58, "#17123a");
-  sky.addColorStop(1, "#261340");
+  sky.addColorStop(0, "#25324a");
+  sky.addColorStop(0.52, "#866c78");
+  sky.addColorStop(0.78, "#d28d75");
+  sky.addColorStop(1, "#e5bd89");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ctx.fillStyle = "rgba(111, 92, 255, 0.24)";
+  const sunX = 755 - cameraX * 0.06;
+  const sunGlow = ctx.createRadialGradient(sunX, 155, 12, sunX, 155, 100);
+  sunGlow.addColorStop(0, "rgba(255, 218, 164, 0.8)");
+  sunGlow.addColorStop(1, "rgba(240, 178, 139, 0)");
+  ctx.fillStyle = sunGlow;
   ctx.beginPath();
-  ctx.arc(760 - cameraX * 0.04, 112, 78, 0, Math.PI * 2);
+  ctx.arc(sunX, 155, 100, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "rgba(56, 246, 255, 0.45)";
-  ctx.lineWidth = 2;
+  ctx.fillStyle = "#f3c58f";
   ctx.beginPath();
-  ctx.arc(760 - cameraX * 0.04, 112, 52, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.arc(sunX, 155, 46, 0, Math.PI * 2);
+  ctx.fill();
 
-  for (let star = 0; star < 28; star += 1) {
-    const x = ((star * 173 - cameraX * 0.035) % WIDTH + WIDTH) % WIDTH;
-    const y = 28 + (star * 67) % 245;
-    ctx.fillStyle = star % 4 === 0 ? "#ff5bdc" : "#7ffbff";
-    ctx.globalAlpha = 0.35 + (star % 3) * 0.2;
-    ctx.fillRect(x, y, star % 4 === 0 ? 2 : 1, star % 4 === 0 ? 2 : 1);
-  }
-  ctx.globalAlpha = 1;
+  drawMountainLayer(390, 0.08, 205, "#697785");
+  drawMountainLayer(438, 0.16, 160, "#47596a");
+  drawMountainLayer(469, 0.25, 122, "#344757");
+  drawCloud(120 - (cameraX * 0.12) % 1120, 178, 1);
+  drawCloud(540 - (cameraX * 0.16) % 1260, 236, 0.72);
+  drawCloud(900 - (cameraX * 0.1) % 1180, 194, 0.86);
+  drawPagoda(185 - cameraX * 0.18, 426, 0.72);
+  drawPagoda(1110 - cameraX * 0.18, 426, 0.58);
 
-  drawCityLayer(462, 0.12, 118, "#111633", "rgba(149, 112, 255, 0.38)");
-  drawCityLayer(480, 0.24, 92, "#0b1029", "rgba(56, 246, 255, 0.52)");
-
-  ctx.strokeStyle = "rgba(56, 246, 255, 0.15)";
-  ctx.lineWidth = 1;
-  for (let y = 485; y < HEIGHT; y += 14) {
+  for (let petal = 0; petal < 18; petal += 1) {
+    const x = ((petal * 113 - elapsed * 0.025 - cameraX * 0.08) % WIDTH + WIDTH) % WIDTH;
+    const y = 76 + ((petal * 71 + elapsed * 0.018) % 315);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.sin(elapsed / 480 + petal) * 0.8);
+    ctx.fillStyle = petal % 3 === 0 ? "rgba(255, 218, 205, 0.9)" : "rgba(225, 151, 148, 0.78)";
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(WIDTH, y);
-    ctx.stroke();
-  }
-  for (let x = -WIDTH; x < WIDTH * 2; x += 80) {
-    ctx.beginPath();
-    ctx.moveTo(WIDTH / 2 + (x - WIDTH / 2) * 0.12, 465);
-    ctx.lineTo(x - (cameraX * 0.24) % 80, HEIGHT);
-    ctx.stroke();
+    ctx.ellipse(0, 0, 5, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 }
 
-function drawCityLayer(baseY, speed, step, buildingColor, windowColor) {
-  const scroll = cameraX * speed;
-  const offset = scroll % step;
-  const firstCell = Math.floor(scroll / step);
-  for (let index = -1; index < WIDTH / step + 2; index += 1) {
-    const cell = firstCell + index;
-    const seed = Math.abs(cell * 37 + 19);
-    const x = index * step - offset;
-    const width = step * (0.62 + (seed % 25) / 100);
-    const height = 60 + (seed * 17) % 100;
-    const top = baseY - height;
-    ctx.fillStyle = buildingColor;
-    ctx.fillRect(x, top, width, height);
-    ctx.strokeStyle = windowColor;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + 0.5, top + 0.5, width - 1, height - 1);
-    ctx.fillStyle = windowColor;
-    for (let windowY = top + 12; windowY < baseY - 8; windowY += 17) {
-      for (let windowX = x + 8; windowX < x + width - 5; windowX += 15) {
-        if ((Math.floor(windowX + windowY + seed) % 3) !== 0) ctx.fillRect(windowX, windowY, 3, 5);
-      }
-    }
+function drawMountainLayer(baseY, speed, width, color) {
+  const offset = (cameraX * speed) % width;
+  const firstPeak = Math.floor(cameraX * speed / width);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, HEIGHT);
+  for (let index = -1; index < WIDTH / width + 2; index += 1) {
+    const seed = Math.abs((firstPeak + index) * 31 + 17);
+    const peakX = index * width - offset + width * (0.35 + seed % 30 / 100);
+    const peakY = baseY - 62 - seed % 76;
+    ctx.lineTo(peakX - width * 0.56, baseY);
+    ctx.lineTo(peakX, peakY);
+    ctx.lineTo(peakX + width * 0.56, baseY);
   }
+  ctx.lineTo(WIDTH, HEIGHT);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCloud(x, y, scale) {
+  ctx.fillStyle = "rgba(247, 224, 199, 0.24)";
+  ctx.beginPath();
+  ctx.ellipse(x, y, 44 * scale, 9 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 23 * scale, y - 5 * scale, 28 * scale, 11 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(x - 25 * scale, y - 3 * scale, 25 * scale, 10 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawPagoda(x, baseY, scale) {
+  ctx.save();
+  ctx.translate(x, baseY);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#293748";
+  ctx.fillRect(-18, -64, 36, 64);
+  for (let level = 0; level < 3; level += 1) {
+    const y = -59 + level * 21;
+    const halfWidth = 34 - level * 7;
+    ctx.beginPath();
+    ctx.moveTo(-halfWidth - 8, y + 3);
+    ctx.lineTo(0, y - 5);
+    ctx.lineTo(halfWidth + 8, y + 3);
+    ctx.lineTo(halfWidth + 4, y + 7);
+    ctx.lineTo(-halfWidth - 4, y + 7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#b96652";
+    ctx.fillRect(-halfWidth + 2, y + 8, (halfWidth - 2) * 2, 2);
+    ctx.fillStyle = "#293748";
+  }
+  ctx.fillRect(-3, -78, 6, 15);
+  ctx.restore();
 }
 
 function drawPlatform(platform) {
   const x = platform.x - cameraX;
   if (x + platform.w < 0 || x > WIDTH) return;
-  ctx.fillStyle = platform.h > 30 ? "#10152e" : "#171637";
-  roundedRect(x, platform.y, platform.w, platform.h, 7);
+  const isGround = platform.h > 30;
+  ctx.fillStyle = isGround ? "#38464d" : "#725941";
+  roundedRect(x, platform.y, platform.w, platform.h, 6);
   ctx.fill();
-  ctx.shadowColor = "#38f6ff";
-  ctx.shadowBlur = 12;
-  ctx.strokeStyle = "rgba(56, 246, 255, 0.82)";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = isGround ? "#28363d" : "#4d3c31";
+  ctx.lineWidth = 2;
   ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "#38f6ff";
-  roundedRect(x, platform.y, platform.w, 9, 5);
+  ctx.fillStyle = isGround ? "#82906c" : "#b18a57";
+  roundedRect(x, platform.y, platform.w, 8, 4);
   ctx.fill();
-  ctx.fillStyle = "rgba(255, 53, 211, 0.62)";
+  ctx.fillStyle = "rgba(240, 229, 202, 0.28)";
   for (let mark = 0; mark < platform.w; mark += 38) {
-    ctx.fillRect(x + mark + 9, platform.y + 20, 12, 2);
+    if (isGround) {
+      ctx.fillRect(x + mark + 7, platform.y + 21, 17, 2);
+      ctx.fillRect(x + mark + 29, platform.y + 35, 2, 12);
+    } else {
+      ctx.fillRect(x + mark + 7, platform.y + 20, 2, 10);
+    }
   }
 }
 
@@ -421,18 +451,19 @@ function drawCoin(coin) {
   ctx.save();
   ctx.translate(x, coin.y);
   ctx.scale(pulse, 1);
-  ctx.shadowColor = "#38f6ff";
-  ctx.shadowBlur = 18;
-  ctx.fillStyle = "#38f6ff";
+  ctx.shadowColor = "#d9b56b";
+  ctx.shadowBlur = 7;
+  ctx.fillStyle = "#d9b56b";
   ctx.beginPath();
-  ctx.arc(0, 0, 11, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 9, 13, -0.16, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#ff69df";
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#f5e3b8";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "#091127";
-  ctx.fillRect(-1, -6, 2, 12);
+  ctx.fillStyle = "#876336";
+  ctx.fillRect(-5, -2, 10, 1.5);
+  ctx.fillRect(-4, 2, 8, 1.5);
   ctx.restore();
 }
 
@@ -444,43 +475,50 @@ function drawPlayer() {
   ctx.translate(x + player.w / 2, y + bob);
   if (player.invulnerableMs > 0 && Math.floor(elapsed / 90) % 2 === 0) ctx.globalAlpha = 0.45;
 
-  ctx.fillStyle = "rgba(56, 246, 255, 0.16)";
+  ctx.fillStyle = "rgba(19, 28, 38, 0.25)";
   ctx.beginPath();
   ctx.ellipse(0, player.h + 2, 18, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.shadowColor = player.invulnerableMs > 0 ? "#ff35d3" : "#38f6ff";
-  ctx.shadowBlur = 15;
-  ctx.fillStyle = "#17122f";
+  ctx.shadowColor = player.invulnerableMs > 0 ? "#c94f42" : "#172033";
+  ctx.shadowBlur = 4;
+  ctx.fillStyle = "#263650";
   roundedRect(-15, 5, 30, 34, 9);
   ctx.fill();
-  ctx.strokeStyle = "#38f6ff";
+  ctx.strokeStyle = "#172033";
   ctx.lineWidth = 2;
   ctx.stroke();
-  ctx.fillStyle = "#b8fbff";
+  ctx.fillStyle = "#e7c9a7";
   roundedRect(-12, -9, 24, 23, 9);
   ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "#fff8ed";
+  ctx.fillStyle = "#f4ead5";
   ctx.beginPath();
   ctx.arc(player.facing * 4, 0, 3, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#34475b";
+  ctx.fillStyle = "#4c382f";
   ctx.beginPath();
   ctx.arc(player.facing * 5 + player.facing, 0, 1.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ff35d3";
+  ctx.fillStyle = "#c94f42";
   roundedRect(-14, 34, 12, 9, 4);
   ctx.fill();
   roundedRect(3, 34, 12, 9, 4);
   ctx.fill();
+  ctx.fillStyle = "#c94f42";
+  roundedRect(-12, -8, 24, 3, 1);
+  ctx.fill();
   if (player.attackMs > 0) {
-    ctx.shadowColor = "#38f6ff";
-    ctx.shadowBlur = 18;
-    ctx.strokeStyle = "#38f6ff";
-    ctx.lineWidth = 4;
+    ctx.shadowColor = "#c94f42";
+    ctx.shadowBlur = 5;
+    ctx.strokeStyle = "#f4dfb5";
+    ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.arc(player.facing * 28, 17, 24, player.facing > 0 ? -0.8 : Math.PI - 0.8, player.facing > 0 ? 0.8 : Math.PI + 0.8);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#c94f42";
+    ctx.lineWidth = 2;
     ctx.stroke();
   }
   ctx.restore();
@@ -492,25 +530,36 @@ function drawEnemy(enemy) {
   if (x + enemy.w < 0 || x > WIDTH) return;
   ctx.save();
   ctx.translate(x + enemy.w / 2, enemy.y);
-  ctx.shadowColor = "#ff35d3";
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = "#1b1034";
+  ctx.shadowColor = "#171d2d";
+  ctx.shadowBlur = 4;
+  ctx.fillStyle = "#51435a";
   roundedRect(-16, 8, 32, 27, 10);
   ctx.fill();
-  ctx.strokeStyle = "#ff35d3";
+  ctx.strokeStyle = "#332b3e";
   ctx.lineWidth = 2;
   ctx.stroke();
-  ctx.fillStyle = "#ff35d3";
+  ctx.fillStyle = "#bc5549";
+  ctx.beginPath();
+  ctx.moveTo(-11, 12);
+  ctx.lineTo(-17, -1);
+  ctx.lineTo(-3, 7);
+  ctx.closePath();
+  ctx.moveTo(11, 12);
+  ctx.lineTo(17, -1);
+  ctx.lineTo(3, 7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#c77768";
   ctx.beginPath();
   ctx.arc(0, 9, 16, Math.PI, 0);
   ctx.fill();
-  ctx.fillStyle = "#38f6ff";
+  ctx.fillStyle = "#f2d18a";
   ctx.beginPath();
   ctx.arc(-6, 18, 3, 0, Math.PI * 2);
   ctx.arc(6, 18, 3, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "#071022";
+  ctx.fillStyle = "#392b39";
   ctx.beginPath();
   ctx.arc(-6, 18, 1.5, 0, Math.PI * 2);
   ctx.arc(6, 18, 1.5, 0, Math.PI * 2);
@@ -520,26 +569,21 @@ function drawEnemy(enemy) {
 
 function drawGoal() {
   const x = WORLD_WIDTH - 105 - cameraX;
-  ctx.shadowColor = "#38f6ff";
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = "#38f6ff";
-  ctx.fillRect(x, 355, 5, 110);
-  ctx.shadowBlur = 10;
-  ctx.shadowColor = "#ff35d3";
-  ctx.fillStyle = "#ff35d3";
+  ctx.fillStyle = "#392d2d";
+  ctx.fillRect(x - 20, 351, 8, 114);
+  ctx.fillRect(x + 39, 351, 8, 114);
+  ctx.fillStyle = "#c94f42";
+  ctx.fillRect(x - 25, 359, 78, 10);
+  ctx.fillRect(x - 19, 376, 66, 7);
   ctx.beginPath();
-  ctx.moveTo(x + 5, 358);
-  ctx.lineTo(x + 48, 371);
-  ctx.lineTo(x + 5, 385);
+  ctx.moveTo(x - 31, 359);
+  ctx.lineTo(x - 24, 347);
+  ctx.lineTo(x + 52, 347);
+  ctx.lineTo(x + 59, 359);
   ctx.closePath();
   ctx.fill();
-  ctx.shadowColor = "#38f6ff";
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = "#d9ffff";
-  ctx.beginPath();
-  ctx.arc(x + 2, 352, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#e4c28a";
+  ctx.fillRect(x - 31, 359, 90, 3);
 }
 
 function roundedRect(x, y, width, height, radius) {

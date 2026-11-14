@@ -3,30 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#08091c" />
-    <title>SKYBOUND — NEON RUN</title>
+    <meta name="theme-color" content="#172033" />
+    <title>SKYBOUND — 和風アクション</title>
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" defer></script>
   </head>
   <body>
     <main class="page">
       <header class="page-header">
-        <p class="eyebrow">CYBER PLATFORMER</p>
-        <h1>SKYBOUND <span>— ネオンの街を駆け抜けろ</span></h1>
+        <p class="eyebrow">JAPANESE FANTASY PLATFORMER</p>
+        <h1>SKYBOUND <span>— 花霞の古道</span></h1>
       </header>
 
       <section class="game-shell" aria-label="横スクロールアクションゲーム">
         <div class="game-topbar">
           <div class="brand-mark" aria-hidden="true">S</div>
-          <div class="game-name">NEON DISTRICT <span>SECTOR 01</span></div>
+          <div class="game-name">花霞の古道 <span>STAGE 01</span></div>
           <div class="hud">
             <span class="coin-icon" aria-hidden="true">●</span>
             <span id="coin-count">0 / 5</span>
             <span class="hud-divider" aria-hidden="true"></span>
-            <span class="stamina-label">STAMINA</span>
+            <span class="stamina-label">気力</span>
             <span id="stamina-count" aria-label="スタミナ">♥♥♥</span>
             <span class="hud-divider" aria-hidden="true"></span>
-            <span id="score-count">SCORE 00000</span>
+            <span id="score-count">得点 00000</span>
           </div>
         </div>
 
@@ -34,8 +34,8 @@
           <canvas id="game" width="960" height="540" aria-label="ゲーム画面"></canvas>
           <div id="overlay" class="overlay">
             <div class="overlay-card">
-              <p class="eyebrow">NEON CITY // RUNNER</p>
-              <h2 id="overlay-title">光の街を<br />駆け抜けろ。</h2>
+              <p class="eyebrow">夕映えの山道 // STAGE 01</p>
+              <h2 id="overlay-title">鳥居の先へ<br />駆け抜けよう。</h2>
               <p id="overlay-copy">コインを集め、敵を倒してゴールへ！穴に落ちると一発でアウト。</p>
               <button id="start-button" class="start-button" type="button">冒険をはじめる <span>→</span></button>
               <p class="key-hint">移動 <kbd>←</kbd> <kbd>→</kbd>　ジャンプ <kbd>Space</kbd>　攻撃 <kbd>X</kbd></p>
@@ -55,7 +55,7 @@
         <button type="button" data-control="jump" aria-label="ジャンプ">JUMP</button>
         <button type="button" data-control="attack" aria-label="攻撃">ATTACK</button>
       </div>
-      <p class="page-note">ネオンの光を追い、夜明けを目指せ。</p>
+      <p class="page-note">花びら舞う古道を越え、朱の鳥居を目指せ。</p>
     </main>
   </body>
 </html>
